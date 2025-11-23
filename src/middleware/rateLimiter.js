@@ -1,4 +1,6 @@
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
+import redisClient from '../config/redis.js';
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -8,6 +10,9 @@ const limiter = rateLimit({
     message: {
         error: 'Too many requests from this IP, please try again after 15 minutes',
     },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
 });
 
 export default limiter;
