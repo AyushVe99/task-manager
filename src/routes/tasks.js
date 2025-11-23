@@ -25,7 +25,10 @@ taskRouter.post('/', authMiddleware, async (req, res) => {
 
 taskRouter.get('/', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({ owner: req.user.userId });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const tasks = await Task.find({ owner: req.user.userId }).skip(skip).limit(limit);
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
