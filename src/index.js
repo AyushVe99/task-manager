@@ -32,8 +32,6 @@ app.use(
     })
 );
 
-app.options("*", cors());
-
 
 // Apply request context tracking (MUST be first for DB call tracking)
 app.use((req, res, next) => {
