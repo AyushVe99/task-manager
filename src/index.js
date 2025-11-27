@@ -22,7 +22,18 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// CORS configuration
+app.use(
+    cors({
+        origin: "https://task-manager-frontend-pi-sage.vercel.app",
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
+app.options("*", cors());
+
 
 // Apply request context tracking (MUST be first for DB call tracking)
 app.use((req, res, next) => {
