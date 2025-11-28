@@ -16,8 +16,11 @@ import {
     logoutAllDevicesRouter,
     refreshTokenRouter,
 } from './routes/auth.js';
+import timeEntryRouter from './routes/timeentry.js';
 import { requestTrackerMiddleware } from './middleware/requestTracker.js';
 import { requestContext } from './utils/dbCallTracker.js';
+import { initializeSocket } from './services/socket.js';
+import usersRouter from './routes/users.js';
 
 dotenv.config();
 
@@ -26,7 +29,7 @@ const app = express();
 // CORS configuration
 app.use(
     cors({
-        origin: "https://task-manager-frontend-pi-sage.vercel.app",
+        origin: ["https://task-manager-frontend-pi-sage.vercel.app", "http://localhost:3001"],
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
@@ -61,6 +64,8 @@ app.use('/auth/refresh-token', refreshTokenRouter);
 
 // Task routes
 app.use('/api/tasks', authMiddleware, taskRouter);
+app.use('/api/task/:taskId/time-entries', authMiddleware, timeEntryRouter);
+app.use('/api/users', usersRouter);
 
 // Error handling middleware
 app.use(errorHandler);

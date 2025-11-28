@@ -1,3 +1,4 @@
 node_modules
 DEPLOYMENT.md
 POOL_MONITORING.md
+.env

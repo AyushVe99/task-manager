@@ -29,6 +29,30 @@ taskRouter.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/tasks/all
+ * Get all tasks from all users (with optional filtering by owner)
+ */
+taskRouter.get('/all', authMiddleware, async (req, res) => {
+    try {
+        const { owner } = req.query;
+        const query = {};
+
+        if (owner) {
+            query.owner = owner;
+        }
+
+        const tasks = await Task.find(query)
+            .populate('owner', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 taskRouter.get('/', authMiddleware, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
