@@ -2,6 +2,7 @@ import express from 'express';
 import Task from '../models/Task.js';
 import User from '../models/user.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { getIO } from '../services/socket.js';
 
 const taskRouter = express.Router();
 
@@ -17,15 +18,47 @@ taskRouter.post('/', authMiddleware, async (req, res) => {
             tags,
             owner: req.user.userId,
         });
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.created', task);
+
         res.status(201).json(task);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
+/**
+ * GET /api/tasks/all
+ * Get all tasks from all users (with optional filtering by owner)
+ */
+taskRouter.get('/all', authMiddleware, async (req, res) => {
+    try {
+        const { owner } = req.query;
+        const query = {};
+
+        if (owner) {
+            query.owner = owner;
+        }
+
+        const tasks = await Task.find(query)
+            .populate('owner', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 taskRouter.get('/', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({ owner: req.user.userId });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const tasks = await Task.find({ owner: req.user.userId }).skip(skip).limit(limit);
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -67,6 +100,11 @@ taskRouter.put('/:id', authMiddleware, async (req, res) => {
         if (!task) {
             return res.status(404).json({ error: 'Task not found or unauthorized' });
         }
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.updated', task);
+
         res.status(200).json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -79,6 +117,11 @@ taskRouter.delete('/:id', authMiddleware, async (req, res) => {
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
         }
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.deleted', { id: req.params.id });
+
         res.status(200).json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });

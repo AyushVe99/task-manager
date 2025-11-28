@@ -8,6 +8,7 @@ import limiter from './middleware/rateLimiter.js';
 import logger from './utils/logger.js';
 import taskRouter from './routes/tasks.js';
 import { authMiddleware } from './middleware/auth.js';
+import errorHandler from './middleware/errorHandler.js';
 import {
     registerUserRouter,
     authenticateUserRouter,
@@ -15,8 +16,11 @@ import {
     logoutAllDevicesRouter,
     refreshTokenRouter,
 } from './routes/auth.js';
+import timeEntryRouter from './routes/timeentry.js';
 import { requestTrackerMiddleware } from './middleware/requestTracker.js';
 import { requestContext } from './utils/dbCallTracker.js';
+import { initializeSocket } from './services/socket.js';
+import usersRouter from './routes/users.js';
 
 dotenv.config();
 
@@ -25,7 +29,7 @@ const app = express();
 // CORS configuration
 app.use(
     cors({
-        origin: "https://task-manager-frontend-pi-sage.vercel.app",
+        origin: ["https://task-manager-frontend-pi-sage.vercel.app", "http://localhost:3001"],
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
@@ -60,15 +64,17 @@ app.use('/auth/refresh-token', refreshTokenRouter);
 
 // Task routes
 app.use('/api/tasks', authMiddleware, taskRouter);
+app.use('/api/task/:taskId/time-entries', authMiddleware, timeEntryRouter);
+app.use('/api/users', usersRouter);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-    logger.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong' });
-});
+app.use(errorHandler);
 
 connectToDatabase();
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
+
+// Initialize socket server 
+initializeSocket(server);

@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Ayush30012000/task-manager#readme",
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
@@ -41,6 +42,7 @@
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "socket.io-client": "^4.8.1",
     "supertest": "^7.1.4"
   }
 }
