@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { dbCallTrackerPlugin } from "../utils/dbCallTracker.js";
 
 const taskSchema = new mongoose.Schema({
     title: {
@@ -42,6 +43,9 @@ const taskSchema = new mongoose.Schema({
 });
 
 taskSchema.index({ owner: 1, status: 1 })
+
+// Apply DB call tracking plugin
+taskSchema.plugin(dbCallTrackerPlugin);
 
 const Task = mongoose.model("Task", taskSchema);
 
