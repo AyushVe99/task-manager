@@ -7,6 +7,7 @@ import limiter from './middleware/rateLimiter.js';
 import logger from './utils/logger.js';
 import taskRouter from './routes/tasks.js';
 import { authMiddleware } from './middleware/auth.js';
+import errorHandler from './middleware/errorHandler.js';
 import {
     registerUserRouter,
     authenticateUserRouter,
@@ -14,6 +15,7 @@ import {
     logoutAllDevicesRouter,
     refreshTokenRouter,
 } from './routes/auth.js';
+import { initializeSocket } from './services/socket.js';
 
 dotenv.config();
 
@@ -40,13 +42,13 @@ app.use('/auth/refresh-token', refreshTokenRouter);
 app.use('/api/tasks', authMiddleware, taskRouter);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-    logger.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong' });
-});
+app.use(errorHandler);
 
 connectToDatabase();
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
 });
+
+// Initialize socket server 
+initializeSocket(server);

@@ -2,6 +2,7 @@ import express from 'express';
 import Task from '../models/Task.js';
 import User from '../models/user.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { getIO } from '../services/socket.js';
 
 const taskRouter = express.Router();
 
@@ -17,6 +18,11 @@ taskRouter.post('/', authMiddleware, async (req, res) => {
             tags,
             owner: req.user.userId,
         });
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.created', task);
+
         res.status(201).json(task);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -70,6 +76,11 @@ taskRouter.put('/:id', authMiddleware, async (req, res) => {
         if (!task) {
             return res.status(404).json({ error: 'Task not found or unauthorized' });
         }
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.updated', task);
+
         res.status(200).json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -82,6 +93,11 @@ taskRouter.delete('/:id', authMiddleware, async (req, res) => {
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
         }
+
+        // Emit event
+        const io = getIO();
+        io.to(req.user.userId).emit('task.deleted', { id: req.params.id });
+
         res.status(200).json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });
